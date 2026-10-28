@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PID - Product Information Database System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pid: {
+                            navy: '#0f172a',
+                            darkBlue: '#1e293b',
+                            blue: '#2563eb',
+                            green: '#10b981',
+                            orange: '#f97316',
+                            lightBg: '#f8fafc',
+                            cardBg: '#ffffff'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 600; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <!-- ========================================== -->
+        <!-- 01. LOGIN PAGE (Initial state or Logged out) -->
+        <!-- ========================================== -->
+        <div id="login-page" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+                <!-- Top Accent Bar -->
+                <div class="h-3 bg-gradient-to-r from-blue-600 via-emerald-500 to-orange-500"></div>
+                
+                <div class="p-8">
+                    <!-- PID Logo & Header -->
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-slate-900 text-white shadow-xl mb-4 border-2 border-slate-700">
+                            <span class="text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-tr from-emerald-400 via-blue-400 to-orange-400">PID</span>
+                        </div>
+                        <h1 class="text-2xl font-bold text-slate-800">ระบบจัดการฐานข้อมูลสินค้า</h1>
+                        <p class="text-xs text-slate-500 mt-1">Product Information Database System</p>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">ชื่อผู้ใช้งาน</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                    <i class="fa-solid fa-user"></i>
+                                </span>
+                                <input type="text" id="username" required value="admin@pid.com" placeholder="กรอกชื่อผู้ใช้..." class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-sm transition">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">รหัสผ่าน</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                    <i class="fa-solid fa-lock"></i>
+                                </span>
+                                <input type="password" id="password" required value="123456" placeholder="กรอกรหัสผ่าน..." class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-sm transition">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs">
+                            <label class="flex items-center text-slate-600 cursor-pointer">
+                                <input type="checkbox" checked class="rounded text-blue-600 focus:ring-blue-500 mr-2"> บันทึกการเข้าสู่ระบบ
+                            </label>
+                            <a href="#" onclick="showToast('ระบบสาธิต: ไม่ต้องรีเซ็ตรหัสผ่าน', 'info')" class="text-blue-600 hover:underline">ลืมรหัสผ่าน?</a>
+                        </div>
+
+                        <button type="submit" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2">
+                            <span>เข้าสู่ระบบ</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </form>
+
+                    <!-- Footer Note -->
+                    <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                        <p class="text-xs text-slate-400">ระบบฐานข้อมูลสินค้า PID Version 2.0 (Empty Data State)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- MAIN APP SYSTEM (NAV + CONTENT) -->
+        <!-- ========================================== -->
+        <div id="main-system" class="hidden flex-1 flex flex-col md:flex-row min-h-screen">
+            
+            <!-- SIDEBAR NAV -->
+            <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col justify-between border-r border-slate-800">
+                <div>
+                    <!-- Brand Banner -->
+                    <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center text-white font-black text-lg shadow-md">
+                            PID
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-white leading-tight">PID System</h2>
+                            <p class="text-[10px] text-slate-400">Product Database</p>
+                        </div>
+                    </div>
+
+                    <!-- Menu List -->
+                    <nav class="p-3 space-y-1">
+                        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition bg-blue-600 text-white">
+                            <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                            <span>หน้าแรก & สินค้า</span>
+                        </button>
+
+                        <button onclick="openAddProductModal()" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+                            <i class="fa-solid fa-square-plus w-5 text-center text-emerald-400"></i>
+                            <span>เพิ่มสินค้าใหม่</span>
+                        </button>
+
+                        <button onclick="exportDataPrompt()" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+                            <i class="fa-solid fa-file-export w-5 text-center text-orange-400"></i>
+                            <span>ส่งออกข้อมูล (Export)</span>
+                        </button>
+
+                        <div class="pt-4 pb-1 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">จัดการข้อมูลระบบ</div>
+                        
+                        <button onclick="clearAllDataPrompt()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition">
+                            <i class="fa-solid fa-trash-can w-5 text-center"></i>
+                            <span>ล้างข้อมูลทั้งหมด</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- User Profile & Logout -->
+                <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold text-sm">
+                            AD
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-xs font-medium text-white truncate" id="user-display-name">ผู้ดูแลระบบ</p>
+                            <p class="text-[10px] text-emerald-400">Online</p>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()" title="ออกจากระบบ" class="text-slate-400 hover:text-rose-400 p-2 rounded-lg hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT AREA -->
+            <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+                
+                <!-- TOP HEADER BAR -->
+                <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-30">
+                    <div class="flex items-center gap-4">
+                        <h1 class="text-xl font-bold text-slate-800" id="page-title">02 หน้ารายการสินค้า & Dashboard</h1>
+                    </div>
+
+                    <!-- Search Bar & Controls -->
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 md:w-80">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </span>
+                            <input type="text" id="search-input" onkeyup="filterProducts()" placeholder="ค้นหา รหัส, ชื่อสินค้า, หมวดหมู่..." class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                        </div>
+
+                        <button onclick="openAddProductModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl shadow flex items-center gap-2 transition flex-shrink-0">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span class="hidden sm:inline">เพิ่มสินค้า</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- BODY CONTENT CONTAINER -->
+                <div class="p-6 space-y-6 flex-1">
+
+                    <!-- DYNAMIC STATS CARDS (02 หน้ารายการสินค้า & Dashboard) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Card 1: Total Products -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">สินค้าทั้งหมด</p>
+                                <h3 class="text-2xl font-black text-slate-800 mt-1" id="stat-total">0</h3>
+                                <p class="text-[11px] text-slate-500 mt-1">รายการสินค้าในระบบ PID</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: New Products -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">สินค้าใหม่ (เดือนนี้)</p>
+                                <h3 class="text-2xl font-black text-emerald-600 mt-1" id="stat-new">0</h3>
+                                <p class="text-[11px] text-emerald-600/80 mt-1">เพิ่มข้อมูลล่าสุด</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-sparkles"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Incomplete Data -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">ข้อมูลไม่สมบูรณ์</p>
+                                <h3 class="text-2xl font-black text-orange-500 mt-1" id="stat-incomplete">0</h3>
+                                <p class="text-[11px] text-orange-600/80 mt-1">ขาดรายละเอียดสำคัญ</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Out of Stock -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">หมดสต็อก / เติมด่วน</p>
+                                <h3 class="text-2xl font-black text-rose-600 mt-1" id="stat-outofstock">0</h3>
+                                <p class="text-[11px] text-rose-600/80 mt-1">จำนวนเหลือ 0 ชิ้น</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-box-open"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PRODUCTS TABLE & LIST SECTION -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                        <!-- Table Filter Bar -->
+                        <div class="p-4 bg-slate-50/50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-600 uppercase">กรองตามหมวดหมู่:</span>
+                                <select id="category-filter" onchange="filterProducts()" class="text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs">
+                                    <option value="ALL">ทั้งหมดทุกหมวดหมู่ (100 หมวดหมู่)</option>
+                                    <option value="TH000ASSET">TH000ASSET</option>
+                                    <option value="TH001CHILLED BREAD">TH001CHILLED BREAD</option>
+                                    <option value="TH002APPETIZER">TH002APPETIZER</option>
+                                    <option value="TH003FRUIT & CHILLED DESSERT">TH003FRUIT & CHILLED DESSERT</option>
+                                    <option value="TH004AVAILABLE">TH004AVAILABLE</option>
+                                    <option value="TH005SI COUNTER DRINK">TH005SI COUNTER DRINK</option>
+                                    <option value="TH006FOOD PLACE">TH006FOOD PLACE</option>
+                                    <option value="TH007TOASTED SANDWICH & HOT BREAD">TH007TOASTED SANDWICH & HOT BREAD</option>
+                                    <option value="TH008BURGER & HOT DOG">TH008BURGER & HOT DOG</option>
+                                    <option value="TH009VALUE CARD">TH009VALUE CARD</option>
+                                    <option value="TH010BEER AND RTD ALCOHOL">TH010BEER AND RTD ALCOHOL</option>
+                                    <option value="TH011LIQUOR">TH011LIQUOR</option>
+                                    <option value="TH012IMPORT CIGARETTE">TH012IMPORT CIGARETTE</option>
+                                    <option value="TH013AVAILABLE">TH013AVAILABLE</option>
+                                    <option value="TH014HEALTH CARE">TH014HEALTH CARE</option>
+                                    <option value="TH015COUNT CUSTOMER">TH015COUNT CUSTOMER</option>
+                                    <option value="TH016สลัด (Salad)">TH016สลัด (Salad)</option>
+                                    <option value="TH017AVAILABLE">TH017AVAILABLE</option>
+                                    <option value="TH018MEDICINE">TH018MEDICINE</option>
+                                    <option value="TH019CHILLED MEAL BOX 1">TH019CHILLED MEAL BOX 1</option>
+                                    <option value="TH020FROZEN MEAL BOX">TH020FROZEN MEAL BOX</option>
+                                    <option value="TH021SAUSAGE - COLD CUT AND FURTHER">TH021SAUSAGE - COLD CUT AND FURTHER</option>
+                                    <option value="TH022CHILLED MEAL BOX 2">TH022CHILLED MEAL BOX 2</option>
+                                    <option value="TH023GRILLED SAUSAGE">TH023GRILLED SAUSAGE</option>
+                                    <option value="TH024WARMED FOODS">TH024WARMED FOODS</option>
+                                    <option value="TH025RETORT MEAL">TH025RETORT MEAL</option>
+                                    <option value="TH026บัตรโทรศัพท์">TH026บัตรโทรศัพท์</option>
+                                    <option value="TH027GAME (7 TOP UP)">TH027GAME (7 TOP UP)</option>
+                                    <option value="TH028BOOKS">TH028BOOKS</option>
+                                    <option value="TH029UHT MILK">TH029UHT MILK</option>
+                                    <option value="TH030PASTEURIZED MILK">TH030PASTEURIZED MILK</option>
+                                    <option value="TH031PASTEURIZED DRINK">TH031PASTEURIZED DRINK</option>
+                                    <option value="TH032COOKING AND CANNED FOODS">TH032COOKING AND CANNED FOODS</option>
+                                    <option value="TH033INSTANT FOODS">TH033INSTANT FOODS</option>
+                                    <option value="TH034PACKAGED FOODS AND DRINKS">TH034PACKAGED FOODS AND DRINKS</option>
+                                    <option value="TH035SPECIAL ITEM">TH035SPECIAL ITEM</option>
+                                    <option value="TH036CHILLED BREAD & SYNERGY PROJECT">TH036CHILLED BREAD & SYNERGY PROJECT</option>
+                                    <option value="TH037แสตมป์ 7-11">TH037แสตมป์ 7-11</option>
+                                    <option value="TH038NON-CARBONATED SOFT DRINK">TH038NON-CARBONATED SOFT DRINK</option>
+                                    <option value="TH039ENTERTAINMENT">TH039ENTERTAINMENT</option>
+                                    <option value="TH040CONFECTIONERY">TH040CONFECTIONERY</option>
+                                    <option value="TH041SNACKS">TH041SNACKS</option>
+                                    <option value="TH042CARBONATED SOFT DRINK (CSD)">TH042CARBONATED SOFT DRINK (CSD)</option>
+                                    <option value="TH043IT Devices">TH043IT Devices</option>
+                                    <option value="TH044ICE CREAM AND NOVELTIES">TH044ICE CREAM AND NOVELTIES</option>
+                                    <option value="TH045ICE">TH045ICE</option>
+                                    <option value="TH0467 Service (GP)">TH0467 Service (GP)</option>
+                                    <option value="TH047AVAILABLE">TH047AVAILABLE</option>
+                                    <option value="TH048HEALTH AND WELLNESS">TH048HEALTH AND WELLNESS</option>
+                                    <option value="TH049ENERGY AND SPORT DRINK">TH049ENERGY AND SPORT DRINK</option>
+                                    <option value="TH050PERSONAL CARE">TH050PERSONAL CARE</option>
+                                    <option value="TH051HOUSEWARE">TH051HOUSEWARE</option>
+                                    <option value="TH052STATIONERY">TH052STATIONERY</option>
+                                    <option value="TH053DRUG & HEALTHCARE">TH053DRUG & HEALTHCARE</option>
+                                    <option value="TH054SANITARY">TH054SANITARY</option>
+                                    <option value="TH055HOUSEHOLD">TH055HOUSEHOLD</option>
+                                    <option value="TH056ELECTRONIC">TH056ELECTRONIC</option>
+                                    <option value="TH057AVAILABLE">TH057AVAILABLE</option>
+                                    <option value="TH058IT APPLIANCE">TH058IT APPLIANCE</option>
+                                    <option value="TH059HERBAL PERSONAL CARE">TH059HERBAL PERSONAL CARE</option>
+                                    <option value="TH060PACKAGE BAKERY">TH060PACKAGE BAKERY</option>
+                                    <option value="TH061SANDWICH BREAD">TH061SANDWICH BREAD</option>
+                                    <option value="TH062FRESH BAKERY">TH062FRESH BAKERY</option>
+                                    <option value="TH063THAI SNACK AND DRY FRUIT">TH063THAI SNACK AND DRY FRUIT</option>
+                                    <option value="TH064เติมเงิน ONLINE (GP)">TH064เติมเงิน ONLINE (GP)</option>
+                                    <option value="TH065AVAILABLE">TH065AVAILABLE</option>
+                                    <option value="TH0667 SERVICE (Commission)">TH0667 SERVICE (Commission)</option>
+                                    <option value="TH067AVAILABLE">TH067AVAILABLE</option>
+                                    <option value="TH068สินค้าเทศกาล">TH068สินค้าเทศกาล</option>
+                                    <option value="TH069SERVICE CARD">TH069SERVICE CARD</option>
+                                    <option value="TH070เติมเงิน ONLINE (Commission)">TH070เติมเงิน ONLINE (Commission)</option>
+                                    <option value="TH0717 TOP UP CASH">TH0717 TOP UP CASH</option>
+                                    <option value="TH072THAI CIGARETTE">TH072THAI CIGARETTE</option>
+                                    <option value="TH073BELLINEE BAKERY">TH073BELLINEE BAKERY</option>
+                                    <option value="TH074CHARITY">TH074CHARITY</option>
+                                    <option value="TH075BELLINEE PACKAGED BAKERY">TH075BELLINEE PACKAGED BAKERY</option>
+                                    <option value="TH076KUDSAN SUPPLY USED">TH076KUDSAN SUPPLY USED</option>
+                                    <option value="TH077WELLNESS AND FASHION">TH077WELLNESS AND FASHION</option>
+                                    <option value="TH078BASKET">TH078BASKET</option>
+                                    <option value="TH079BELLINEE BEVERAGE">TH079BELLINEE BEVERAGE</option>
+                                    <option value="TH080VARIETY BAKERY">TH080VARIETY BAKERY</option>
+                                    <option value="TH081AVAILABLE">TH081AVAILABLE</option>
+                                    <option value="TH082CPG SYNERGY">TH082CPG SYNERGY</option>
+                                    <option value="TH083PROJECT SYNERGY">TH083PROJECT SYNERGY</option>
+                                    <option value="TH084VEGETABLE">TH084VEGETABLE</option>
+                                    <option value="TH085READY TO COOK(RTC)">TH085READY TO COOK(RTC)</option>
+                                    <option value="TH086MAGAZINE AND NEWSPAPER">TH086MAGAZINE AND NEWSPAPER</option>
+                                    <option value="TH087KUDSAN BEVERAGE">TH087KUDSAN BEVERAGE</option>
+                                    <option value="TH088AVAILABLE">TH088AVAILABLE</option>
+                                    <option value="TH089CATALOG ON SHELF">TH089CATALOG ON SHELF</option>
+                                    <option value="TH090PROMOTION PREMIUM">TH090PROMOTION PREMIUM</option>
+                                    <option value="TH091DUMMY PRODUCT PROMOTION">TH091DUMMY PRODUCT PROMOTION</option>
+                                    <option value="TH092AVAILABLE">TH092AVAILABLE</option>
+                                    <option value="TH093AVAILABLE">TH093AVAILABLE</option>
+                                    <option value="TH094SUPPLY FOR SALE">TH094SUPPLY FOR SALE</option>
+                                    <option value="TH095SUPPLY USED">TH095SUPPLY USED</option>
+                                    <option value="TH096HOT SERVED">TH096HOT SERVED</option>
+                                    <option value="TH097SOCIAL WELFARE">TH097SOCIAL WELFARE</option>
+                                    <option value="TH098P.O.P.">TH098P.O.P.</option>
+                                    <option value="TH099SPECIAL PRODUCT">TH099SPECIAL PRODUCT</option>
+                                </select>
+                            </div>
+                            <div class="text-xs text-slate-500">
+                                แสดงข้อมูลสินค้าทั้งหมด <span id="table-count" class="font-bold text-slate-800">0</span> รายการ
+                            </div>
+                        </div>
+
+                        <!-- Table Area -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-100/70 text-slate-700 font-semibold border-b border-slate-200 uppercase tracking-wider">
+                                    <tr>
+                                        <th class="py-3.5 px-4">รูปสินค้า</th>
+                                        <th class="py-3.5 px-4">SKU / รหัส</th>
+                                        <th class="py-3.5 px-4">ชื่อสินค้า / หมวดหมู่</th>
+                                        <th class="py-3.5 px-4 text-right">ราคาขาย</th>
+                                        <th class="py-3.5 px-4 text-center">คงเหลือ</th>
+                                        <th class="py-3.5 px-4 text-center">สถานะ</th>
+                                        <th class="py-3.5 px-4 text-center">การจัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="product-table-body" class="divide-y divide-slate-100">
+                                    <!-- Table Rows Will Be Rendered Dynamically Here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- EMPTY STATE DISPLAY (Shown when products = 0) -->
+                        <div id="empty-state" class="py-16 text-center px-4">
+                            <div class="w-20 h-20 bg-slate-100 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                                <i class="fa-solid fa-box-open"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-slate-700">ไม่มีข้อมูลสินค้าในระบบ</h3>
+                            <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-6">ขณะนี้ยังไม่มีรายการสินค้าในฐานข้อมูล PID คุณสามารถเริ่มเพิ่มรายการสินค้าใหม่ได้ทันที</p>
+                            <button onclick="openAddProductModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow transition inline-flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>คลิกเพื่อเพิ่มสินค้าแรกของคุณ</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 03 & 05: ADD / EDIT PRODUCT FORM -->
+    <!-- ========================================== -->
+    <div id="product-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-pen-to-square" id="modal-icon"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base" id="modal-title">03 เพิ่มสินค้าใหม่ (PID Form)</h3>
+                        <p class="text-[11px] text-slate-400">กรอกข้อมูลให้ครบถ้วนทั้ง 5 ส่วน</p>
+                    </div>
+                </div>
+                <button onclick="closeProductModal()" class="text-slate-400 hover:text-white p-2 rounded-lg transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Form Body with Tabs -->
+            <form id="product-form" onsubmit="saveProduct(event)" class="flex-1 overflow-y-auto p-6 space-y-6">
+                <input type="hidden" id="form-product-id">
+
+                <!-- SECTION 1: ข้อมูลพื้นฐาน -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider border-b border-slate-200 pb-2">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>ส่วนที่ 1: ข้อมูลพื้นฐาน (Basic Info)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">รหัสสินค้า / SKU <span class="text-rose-500">*</span></label>
+                            <input type="text" id="form-sku" required placeholder="เช่น PID-2026-001" class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อสินค้า <span class="text-rose-500">*</span></label>
+                            <input type="text" id="form-name" required placeholder="เช่น แหนมเนือง (ชุด)" class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">หมวดหมู่ <span class="text-rose-500">*</span></label>
+                            <select id="form-category" required class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="">-- เลือกหมวดหมู่ (TH000 - TH099) --</option>
+                                <option value="TH000ASSET">TH000ASSET</option>
+                                <option value="TH001CHILLED BREAD">TH001CHILLED BREAD</option>
+                                <option value="TH002APPETIZER">TH002APPETIZER</option>
+                                <option value="TH003FRUIT & CHILLED DESSERT">TH003FRUIT & CHILLED DESSERT</option>
+                                <option value="TH004AVAILABLE">TH004AVAILABLE</option>
+                                <option value="TH005SI COUNTER DRINK">TH005SI COUNTER DRINK</option>
+                                <option value="TH006FOOD PLACE">TH006FOOD PLACE</option>
+                                <option value="TH007TOASTED SANDWICH & HOT BREAD">TH007TOASTED SANDWICH & HOT BREAD</option>
+                                <option value="TH008BURGER & HOT DOG">TH008BURGER & HOT DOG</option>
+                                <option value="TH009VALUE CARD">TH009VALUE CARD</option>
+                                <option value="TH010BEER AND RTD ALCOHOL">TH010BEER AND RTD ALCOHOL</option>
+                                <option value="TH011LIQUOR">TH011LIQUOR</option>
+                                <option value="TH012IMPORT CIGARETTE">TH012IMPORT CIGARETTE</option>
+                                <option value="TH013AVAILABLE">TH013AVAILABLE</option>
+                                <option value="TH014HEALTH CARE">TH014HEALTH CARE</option>
+                                <option value="TH015COUNT CUSTOMER">TH015COUNT CUSTOMER</option>
+                                <option value="TH016สลัด (Salad)">TH016สลัด (Salad)</option>
+                                <option value="TH017AVAILABLE">TH017AVAILABLE</option>
+                                <option value="TH018MEDICINE">TH018MEDICINE</option>
+                                <option value="TH019CHILLED MEAL BOX 1">TH019CHILLED MEAL BOX 1</option>
+                                <option value="TH020FROZEN MEAL BOX">TH020FROZEN MEAL BOX</option>
+                                <option value="TH021SAUSAGE - COLD CUT AND FURTHER">TH021SAUSAGE - COLD CUT AND FURTHER</option>
+                                <option value="TH022CHILLED MEAL BOX 2">TH022CHILLED MEAL BOX 2</option>
+                                <option value="TH023GRILLED SAUSAGE">TH023GRILLED SAUSAGE</option>
+                                <option value="TH024WARMED FOODS">TH024WARMED FOODS</option>
+                                <option value="TH025RETORT MEAL">TH025RETORT MEAL</option>
+                                <option value="TH026บัตรโทรศัพท์">TH026บัตรโทรศัพท์</option>
+                                <option value="TH027GAME (7 TOP UP)">TH027GAME (7 TOP UP)</option>
+                                <option value="TH028BOOKS">TH028BOOKS</option>
+                                <option value="TH029UHT MILK">TH029UHT MILK</option>
+                                <option value="TH030PASTEURIZED MILK">TH030PASTEURIZED MILK</option>
+                                <option value="TH031PASTEURIZED DRINK">TH031PASTEURIZED DRINK</option>
+                                <option value="TH032COOKING AND CANNED FOODS">TH032COOKING AND CANNED FOODS</option>
+                                <option value="TH033INSTANT FOODS">TH033INSTANT FOODS</option>
+                                <option value="TH034PACKAGED FOODS AND DRINKS">TH034PACKAGED FOODS AND DRINKS</option>
+                                <option value="TH035SPECIAL ITEM">TH035SPECIAL ITEM</option>
+                                <option value="TH036CHILLED BREAD & SYNERGY PROJECT">TH036CHILLED BREAD & SYNERGY PROJECT</option>
+                                <option value="TH037แสตมป์ 7-11">TH037แสตมป์ 7-11</option>
+                                <option value="TH038NON-CARBONATED SOFT DRINK">TH038NON-CARBONATED SOFT DRINK</option>
+                                <option value="TH039ENTERTAINMENT">TH039ENTERTAINMENT</option>
+                                <option value="TH040CONFECTIONERY">TH040CONFECTIONERY</option>
+                                <option value="TH041SNACKS">TH041SNACKS</option>
+                                <option value="TH042CARBONATED SOFT DRINK (CSD)">TH042CARBONATED SOFT DRINK (CSD)</option>
+                                <option value="TH043IT Devices">TH043IT Devices</option>
+                                <option value="TH044ICE CREAM AND NOVELTIES">TH044ICE CREAM AND NOVELTIES</option>
+                                <option value="TH045ICE">TH045ICE</option>
+                                <option value="TH0467 Service (GP)">TH0467 Service (GP)</option>
+                                <option value="TH047AVAILABLE">TH047AVAILABLE</option>
+                                <option value="TH048HEALTH AND WELLNESS">TH048HEALTH AND WELLNESS</option>
+                                <option value="TH049ENERGY AND SPORT DRINK">TH049ENERGY AND SPORT DRINK</option>
+                                <option value="TH050PERSONAL CARE">TH050PERSONAL CARE</option>
+                                <option value="TH051HOUSEWARE">TH051HOUSEWARE</option>
+                                <option value="TH052STATIONERY">TH052STATIONERY</option>
+                                <option value="TH053DRUG & HEALTHCARE">TH053DRUG & HEALTHCARE</option>
+                                <option value="TH054SANITARY">TH054SANITARY</option>
+                                <option value="TH055HOUSEHOLD">TH055HOUSEHOLD</option>
+                                <option value="TH056ELECTRONIC">TH056ELECTRONIC</option>
+                                <option value="TH057AVAILABLE">TH057AVAILABLE</option>
+                                <option value="TH058IT APPLIANCE">TH058IT APPLIANCE</option>
+                                <option value="TH059HERBAL PERSONAL CARE">TH059HERBAL PERSONAL CARE</option>
+                                <option value="TH060PACKAGE BAKERY">TH060PACKAGE BAKERY</option>
+                                <option value="TH061SANDWICH BREAD">TH061SANDWICH BREAD</option>
+                                <option value="TH062FRESH BAKERY">TH062FRESH BAKERY</option>
+                                <option value="TH063THAI SNACK AND DRY FRUIT">TH063THAI SNACK AND DRY FRUIT</option>
+                                <option value="TH064เติมเงิน ONLINE (GP)">TH064เติมเงิน ONLINE (GP)</option>
+                                <option value="TH065AVAILABLE">TH065AVAILABLE</option>
+                                <option value="TH0667 SERVICE (Commission)">TH0667 SERVICE (Commission)</option>
+                                <option value="TH067AVAILABLE">TH067AVAILABLE</option>
+                                <option value="TH068สินค้าเทศกาล">TH068สินค้าเทศกาล</option>
+                                <option value="TH069SERVICE CARD">TH069SERVICE CARD</option>
+                                <option value="TH070เติมเงิน ONLINE (Commission)">TH070เติมเงิน ONLINE (Commission)</option>
+                                <option value="TH0717 TOP UP CASH">TH0717 TOP UP CASH</option>
+                                <option value="TH072THAI CIGARETTE">TH072THAI CIGARETTE</option>
+                                <option value="TH073BELLINEE BAKERY">TH073BELLINEE BAKERY</option>
+                                <option value="TH074CHARITY">TH074CHARITY</option>
+                                <option value="TH075BELLINEE PACKAGED BAKERY">TH075BELLINEE PACKAGED BAKERY</option>
+                                <option value="TH076KUDSAN SUPPLY USED">TH076KUDSAN SUPPLY USED</option>
+                                <option value="TH077WELLNESS AND FASHION">TH077WELLNESS AND FASHION</option>
+                                <option value="TH078BASKET">TH078BASKET</option>
+                                <option value="TH079BELLINEE BEVERAGE">TH079BELLINEE BEVERAGE</option>
+                                <option value="TH080VARIETY BAKERY">TH080VARIETY BAKERY</option>
+                                <option value="TH081AVAILABLE">TH081AVAILABLE</option>
+                                <option value="TH082CPG SYNERGY">TH082CPG SYNERGY</option>
+                                <option value="TH083PROJECT SYNERGY">TH083PROJECT SYNERGY</option>
+                                <option value="TH084VEGETABLE">TH084VEGETABLE</option>
+                                <option value="TH085READY TO COOK(RTC)">TH085READY TO COOK(RTC)</option>
+                                <option value="TH086MAGAZINE AND NEWSPAPER">TH086MAGAZINE AND NEWSPAPER</option>
+                                <option value="TH087KUDSAN BEVERAGE">TH087KUDSAN BEVERAGE</option>
+                                <option value="TH088AVAILABLE">TH088AVAILABLE</option>
+                                <option value="TH089CATALOG ON SHELF">TH089CATALOG ON SHELF</option>
+                                <option value="TH090PROMOTION PREMIUM">TH090PROMOTION PREMIUM</option>
+                                <option value="TH091DUMMY PRODUCT PROMOTION">TH091DUMMY PRODUCT PROMOTION</option>
+                                <option value="TH092AVAILABLE">TH092AVAILABLE</option>
+                                <option value="TH093AVAILABLE">TH093AVAILABLE</option>
+                                <option value="TH094SUPPLY FOR SALE">TH094SUPPLY FOR SALE</option>
+                                <option value="TH095SUPPLY USED">TH095SUPPLY USED</option>
+                                <option value="TH096HOT SERVED">TH096HOT SERVED</option>
+                                <option value="TH097SOCIAL WELFARE">TH097SOCIAL WELFARE</option>
+                                <option value="TH098P.O.P.">TH098P.O.P.</option>
+                                <option value="TH099SPECIAL PRODUCT">TH099SPECIAL PRODUCT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">แบรนด์ / ผู้ผลิต</label>
+                            <input type="text" id="form-brand" placeholder="เช่น CP, แม่จุ๋ม, TGM..." class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: ข้อมูลสินค้า -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider border-b border-slate-200 pb-2">
+                        <i class="fa-solid fa-tags"></i>
+                        <span>ส่วนที่ 2: ข้อมูลสินค้าและสต็อก (Product Details)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">ราคาขาย (บาท) <span class="text-rose-500">*</span></label>
+                            <input type="number" step="0.01" id="form-price" required placeholder="0.00" class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">จำนวนสต็อก <span class="text-rose-500">*</span></label>
+                            <input type="number" id="form-stock" required min="0" placeholder="0" class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">คำอธิบายรายละเอียดสินค้า</label>
+                        <textarea id="form-description" rows="2" placeholder="ระบุคุณสมบัติของสินค้า..." class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: ข้อมูลเพิ่มเติม -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider border-b border-slate-200 pb-2">
+                        <i class="fa-solid fa-truck-field"></i>
+                        <span>ส่วนที่ 3: ข้อมูลเพิ่มเติม & ซัพพลายเออร์ (Additional Info)</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อผู้จัดจำหน่าย / ซัพพลายเออร์</label>
+                        <input type="text" id="form-supplier" placeholder="เช่น บริษัท ซัพพลาย จำกัด" class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- SECTION 4: อัปโหลดรูปภาพ -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider border-b border-slate-200 pb-2">
+                        <i class="fa-solid fa-image"></i>
+                        <span>ส่วนที่ 4: อัปโหลดรูปภาพ (Product Image)</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">URL รูปภาพสินค้า</label>
+                        <input type="url" id="form-image" onchange="previewFormImage()" placeholder="https://images.unsplash.com/..." class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <p class="text-[10px] text-slate-400 mt-1">วางลิงก์รูปภาพ หรือปล่อยว่างไว้เพื่อใช้รูปเริ่มต้น</p>
+                    </div>
+                    <div id="image-preview-box" class="hidden text-center p-3 bg-white rounded-lg border border-slate-200">
+                        <img id="image-preview" src="" alt="Preview" class="max-h-32 mx-auto rounded object-contain">
+                    </div>
+                </div>
+
+                <!-- SECTION 5: ข้อมูลระบบ -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider border-b border-slate-200 pb-2">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>ส่วนที่ 5: ข้อมูลระบบ & สถานะ (System Settings)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">สถานะสินค้า</label>
+                            <select id="form-status" class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="Active">เปิดใช้งาน (Active)</option>
+                                <option value="Draft">ฉบับร่าง (Draft)</option>
+                                <option value="Inactive">ปิดใช้งาน (Inactive)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">ติดป้ายกำกับพิเศษ</label>
+                            <div class="flex items-center gap-4 pt-2">
+                                <label class="inline-flex items-center text-xs text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="form-is-new" class="rounded text-blue-600 mr-1.5"> สินค้าใหม่
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Buttons -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>บันทึกข้อมูลสินค้า</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 04: PRODUCT DETAIL VIEW -->
+    <!-- ========================================== -->
+    <div id="detail-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-blue-400"></i>
+                    <h3 class="font-bold text-base">04 รายละเอียดสินค้า (Product Info)</h3>
+                </div>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white p-2 rounded-lg transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 overflow-y-auto space-y-6" id="detail-modal-body">
+                <!-- Dynamic Content Here -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                <span class="text-xs text-slate-400" id="detail-sku-tag">SKU: -</span>
+                <button onclick="closeDetailModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl transition">
+                    ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT LOGIC & STATE MANAGEMENT -->
+    <!-- ========================================== -->
+    <script>
+        // State Management
+        let products = [];
+        let isLoggedIn = false;
+
+        // Load data on start
+        window.onload = function() {
+            loadLocalStorageData();
+            checkLoginState();
+            renderDashboard();
+        };
+
+        // LocalStorage Logic
+        function loadLocalStorageData() {
+            const stored = localStorage.getItem('PID_PRODUCTS_DATA');
+            if (stored) {
+                try {
+                    products = JSON.parse(stored);
+                } catch(e) {
+                    products = [];
+                }
+            } else {
+                // Initial State is EMPTY as requested
+                products = [];
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('PID_PRODUCTS_DATA', JSON.stringify(products));
+        }
+
+        // Login System (01 หน้า Login)
+        function checkLoginState() {
+            const auth = localStorage.getItem('PID_AUTH');
+            if (auth === 'true') {
+                isLoggedIn = true;
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('main-system').classList.remove('hidden');
+            } else {
+                isLoggedIn = false;
+                document.getElementById('login-page').classList.remove('hidden');
+                document.getElementById('main-system').classList.add('hidden');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            localStorage.setItem('PID_AUTH', 'true');
+            showToast('เข้าสู่ระบบสำเร็จ ยินดีต้อนรับเข้าสู่ PID', 'success');
+            checkLoginState();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('PID_AUTH');
+            showToast('ออกจากระบบเรียบร้อยแล้ว', 'info');
+            checkLoginState();
+        }
+
+        // Dashboard & Render Logic (02 หน้ารายการสินค้า & Dashboard)
+        function renderDashboard() {
+            const tbody = document.getElementById('product-table-body');
+            const emptyState = document.getElementById('empty-state');
+            const categoryFilter = document.getElementById('category-filter').value;
+            const searchInput = document.getElementById('search-input').value.toLowerCase();
+
+            // Stats Calculation
+            const total = products.length;
+            const newCount = products.filter(p => p.isNew).length;
+            const incompleteCount = products.filter(p => !p.brand || !p.supplier || !p.description).length;
+            const outOfStockCount = products.filter(p => parseInt(p.stock) === 0).length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-new').innerText = newCount;
+            document.getElementById('stat-incomplete').innerText = incompleteCount;
+            document.getElementById('stat-outofstock').innerText = outOfStockCount;
+
+            // Filter Products
+            let filtered = products.filter(p => {
+                const matchesCat = (categoryFilter === 'ALL' || p.category === categoryFilter);
+                const matchesSearch = p.name.toLowerCase().includes(searchInput) || 
+                                      p.sku.toLowerCase().includes(searchInput) || 
+                                      (p.brand && p.brand.toLowerCase().includes(searchInput));
+                return matchesCat && matchesSearch;
+            });
+
+            document.getElementById('table-count').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            
+            // Build Table Rows
+            tbody.innerHTML = filtered.map(p => {
+                const defaultImg = 'https://placehold.co/100x100/f1f5f9/94a3b8?text=No+Image';
+                const isOutOfStock = parseInt(p.stock) === 0;
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 px-4">
+                            <img src="${p.image || defaultImg}" onerror="this.src='${defaultImg}'" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
+                        </td>
+                        <td class="py-3 px-4 font-mono font-semibold text-slate-700">${p.sku}</td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-slate-800 text-xs">${p.name}</div>
+                            <div class="text-[10px] text-slate-400">${p.category} ${p.brand ? '| ' + p.brand : ''}</div>
+                        </td>
+                        <td class="py-3 px-4 text-right font-semibold text-slate-800">
+                            ฿${parseFloat(p.price || 0).toLocaleString('th-TH', {minimumFractionDigits: 2})}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${isOutOfStock ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'}">
+                                ${p.stock} ชิ้น
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold ${p.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
+                                ${p.status || 'Active'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="viewProductDetail('${p.id}')" title="ดูรายละเอียด" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </button>
+                                <button onclick="openEditProductModal('${p.id}')" title="แก้ไข" class="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </button>
+                                <button onclick="deleteProduct('${p.id}')" title="ลบ" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterProducts() {
+            renderDashboard();
+        }
+
+        // Add & Edit Product Logic (03 เพิ่มสินค้า & 05 แก้ไข)
+        function openAddProductModal() {
+            document.getElementById('modal-title').innerText = '03 เพิ่มสินค้าใหม่ (PID Form)';
+            document.getElementById('product-form').reset();
+            document.getElementById('form-product-id').value = '';
+            document.getElementById('image-preview-box').classList.add('hidden');
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function openEditProductModal(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+
+            document.getElementById('modal-title').innerText = '05 แก้ไขข้อมูลสินค้า (Edit PID Form)';
+            document.getElementById('form-product-id').value = product.id;
+            document.getElementById('form-sku').value = product.sku;
+            document.getElementById('form-name').value = product.name;
+            document.getElementById('form-category').value = product.category;
+            document.getElementById('form-brand').value = product.brand || '';
+            document.getElementById('form-price').value = product.price;
+            document.getElementById('form-stock').value = product.stock;
+            document.getElementById('form-description').value = product.description || '';
+            document.getElementById('form-supplier').value = product.supplier || '';
+            document.getElementById('form-image').value = product.image || '';
+            document.getElementById('form-status').value = product.status || 'Active';
+            document.getElementById('form-is-new').checked = !!product.isNew;
+
+            previewFormImage();
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+        }
+
+        function previewFormImage() {
+            const url = document.getElementById('form-image').value;
+            const previewBox = document.getElementById('image-preview-box');
+            const previewImg = document.getElementById('image-preview');
+            if (url) {
+                previewImg.src = url;
+                previewBox.classList.remove('hidden');
+            } else {
+                previewBox.classList.add('hidden');
+            }
+        }
+
+        function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('form-product-id').value;
+            const sku = document.getElementById('form-sku').value;
+            const name = document.getElementById('form-name').value;
+            const category = document.getElementById('form-category').value;
+            const brand = document.getElementById('form-brand').value;
+            const price = document.getElementById('form-price').value;
+            const stock = document.getElementById('form-stock').value;
+            const description = document.getElementById('form-description').value;
+            const supplier = document.getElementById('form-supplier').value;
+            const image = document.getElementById('form-image').value;
+            const status = document.getElementById('form-status').value;
+            const isNew = document.getElementById('form-is-new').checked;
+
+            if (id) {
+                // Edit Existing
+                const index = products.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    products[index] = { ...products[index], sku, name, category, brand, price, stock, description, supplier, image, status, isNew, updatedAt: new Date().toISOString() };
+                    showToast('บันทึกการแก้ไขสินค้าสำเร็จ', 'success');
+                }
+            } else {
+                // Add New
+                const newProduct = {
+                    id: 'PID-' + Date.now(),
+                    sku, name, category, brand, price, stock, description, supplier, image, status, isNew,
+                    createdAt: new Date().toISOString()
+                };
+                products.unshift(newProduct);
+                showToast('เพิ่มรายการสินค้าใหม่สำเร็จ', 'success');
+            }
+
+            saveToLocalStorage();
+            renderDashboard();
+            closeProductModal();
+        }
+
+        function deleteProduct(id) {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการสินค้านี้?')) {
+                products = products.filter(p => p.id !== id);
+                saveToLocalStorage();
+                renderDashboard();
+                showToast('ลบรายการสินค้าเรียบร้อยแล้ว', 'info');
+            }
+        }
+
+        // View Detail Logic (04 ค้นหาและดูรายละเอียด)
+        function viewProductDetail(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+
+            const defaultImg = 'https://placehold.co/400x300/f1f5f9/94a3b8?text=No+Image';
+            document.getElementById('detail-sku-tag').innerText = `SKU: ${product.sku} | ID: ${product.id}`;
+
+            document.getElementById('detail-modal-body').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <img src="${product.image || defaultImg}" onerror="this.src='${defaultImg}'" class="w-full h-64 object-cover rounded-2xl border border-slate-200">
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">${product.category}</span>
+                            ${product.isNew ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">สินค้าใหม่</span>' : ''}
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-800">${product.name}</h2>
+                        <p class="text-xs text-slate-500">${product.brand ? 'แบรนด์: ' + product.brand : 'ไม่ระบุแบรนด์'}</p>
+
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                            <div class="text-xs text-slate-400">ราคาขาย</div>
+                            <div class="text-2xl font-black text-blue-600">฿${parseFloat(product.price || 0).toLocaleString('th-TH', {minimumFractionDigits: 2})}</div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs py-2 border-b border-slate-100">
+                            <span class="text-slate-500">จำนวนคงเหลือในสต็อก:</span>
+                            <span class="font-bold ${parseInt(product.stock) === 0 ? 'text-rose-600' : 'text-slate-800'}">${product.stock} ชิ้น</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">รายละเอียดสินค้าเพิ่มเติม</h4>
+                    <p class="text-xs text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed">
+                        ${product.description || 'ไม่มีข้อมูลคำอธิบายสินค้า'}
+                    </p>
+                </div>
+
+                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-2">
+                    <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wider">ข้อมูลซัพพลายเออร์ & การจัดซื้อ</h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div><span class="text-slate-400">ผู้จัดจำหน่าย:</span> <span class="font-medium text-slate-700">${product.supplier || 'ไม่ระบุ'}</span></div>
+                        <div><span class="text-slate-400">สถานะรายการ:</span> <span class="font-medium text-slate-700">${product.status || 'Active'}</span></div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        // Export Functionality (05 แก้ไขและ Export)
+        function exportDataPrompt() {
+            if (products.length === 0) {
+                showToast('ไม่มีข้อมูลสินค้าให้ส่งออก กรุณาเพิ่มสินค้าก่อน', 'error');
+                return;
+            }
+
+            const format = prompt("เลือกรูปแบบการส่งออกข้อมูล:\n1 = CSV File (.csv)\n2 = JSON Data (.json)", "1");
+            if (format === "1") {
+                exportCSV();
+            } else if (format === "2") {
+                exportJSON();
+            }
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "ID,SKU,Name,Category,Brand,Price,Stock,Supplier,Status\n";
+
+            products.forEach(p => {
+                const row = [
+                    p.id,
+                    `"${p.sku}"`,
+                    `"${p.name}"`,
+                    `"${p.category}"`,
+                    `"${p.brand || ''}"`,
+                    p.price,
+                    p.stock,
+                    `"${p.supplier || ''}"`,
+                    p.status || 'Active'
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `PID_Export_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('ส่งออกไฟล์ CSV สำเร็จ', 'success');
+        }
+
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(products, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `PID_Export_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('ส่งออกไฟล์ JSON สำเร็จ', 'success');
+        }
+
+        function clearAllDataPrompt() {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการ "ล้างข้อมูลสินค้าทั้งหมด" ให้เป็น Empty State?')) {
+                products = [];
+                saveToLocalStorage();
+                renderDashboard();
+                showToast('เคลียร์ข้อมูลในระบบเรียบร้อยแล้ว (Empty State)', 'info');
+            }
+        }
+
+        // Tab Switch Helper
+        function switchTab(tab) {
+            // Highlight nav button logic if needed
+            showToast('แสดงหน้าหลักรายการสินค้า', 'info');
+        }
+
+        // UI Toast Notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bg = 'bg-slate-900 text-white';
+            let icon = 'fa-check-circle text-emerald-400';
+
+            if (type === 'error') {
+                bg = 'bg-rose-900 text-white';
+                icon = 'fa-exclamation-circle text-rose-300';
+            } else if (type === 'info') {
+                bg = 'bg-blue-900 text-white';
+                icon = 'fa-info-circle text-blue-300';
+            }
+
+            toast.className = `${bg} px-4 py-3 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-3 transition-all duration-300 transform translate-y-2 pointer-events-auto border border-white/10`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-base"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
